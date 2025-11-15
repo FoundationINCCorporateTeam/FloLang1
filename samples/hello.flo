@@ -1,0 +1,8 @@
+# Hello World in Flo
+
+fn main() do
+  print("Hello, World!")
+  print("Welcome to the Flo programming language!")
+end
+
+main()
