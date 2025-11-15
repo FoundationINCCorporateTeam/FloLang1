@@ -1,0 +1,187 @@
+# Comprehensive Flo Language Demo
+# Demonstrates all major language features
+
+# ============= Basic Values =============
+print("=== Basic Values ===")
+let x := 42
+let pi := 3.14159
+let name := "Flo Language"
+let isActive := true
+
+print("Integer:", x)
+print("Float:", pi)
+print("String:", name)
+print("Boolean:", isActive)
+
+# ============= Arithmetic =============
+print("\n=== Arithmetic ===")
+let sum := 10 + 5
+let difference := 10 - 5
+let product := 10 * 5
+let quotient := 10 / 5
+
+print("10 + 5 =", sum)
+print("10 - 5 =", difference)
+print("10 * 5 =", product)
+print("10 / 5 =", quotient)
+
+# ============= Functions =============
+print("\n=== Functions ===")
+
+fn greet(name) do
+  return "Hello, " + name + "!"
+end
+
+fn add(a, b) do
+  return a + b
+end
+
+fn factorial(n) do
+  if n <= 1 do
+    return 1
+  end
+  return n * factorial(n - 1)
+end
+
+print(greet("World"))
+print("5 + 3 =", add(5, 3))
+print("5! =", factorial(5))
+
+# ============= Control Flow =============
+print("\n=== Control Flow ===")
+
+# If-elif-else
+let score := 85
+if score >= 90 do
+  print("Grade: A")
+elif score >= 80 do
+  print("Grade: B")
+elif score >= 70 do
+  print("Grade: C")
+else do
+  print("Grade: F")
+end
+
+# Match expression
+let status := 200
+match status do
+  200 => print("Status: OK")
+  404 => print("Status: Not Found")
+  500 => print("Status: Server Error")
+  _ => print("Status: Unknown")
+end
+
+# ============= Loops =============
+print("\n=== Loops ===")
+
+# For loop
+print("Counting 1 to 5:")
+for i in range(1, 6) do
+  print(i)
+end
+
+# While loop
+print("Countdown from 5:")
+var count := 5
+while count > 0 do
+  print(count)
+  count = count - 1
+end
+
+# ============= Collections =============
+print("\n=== Collections ===")
+
+# Lists
+let numbers := [1, 2, 3, 4, 5]
+print("Numbers:", numbers)
+
+# Maps
+let person := {name: "Alice", age: 30, city: "NYC"}
+print("Person:", person)
+
+# ============= Error Handling =============
+print("\n=== Error Handling ===")
+
+fn safe_divide(a, b) do
+  attempt do
+    if b == 0 do
+      return "Cannot divide by zero"
+    end
+    return a / b
+  rescue err do
+    print("Error:", err)
+    return nil
+  end
+end
+
+print("10 / 2 =", safe_divide(10, 2))
+print("10 / 0 =", safe_divide(10, 0))
+
+# ============= Async/Concurrency =============
+print("\n=== Async/Concurrency ===")
+
+fn async_task(id, value) do
+  print("Task", id, "starting")
+  return value * 2
+end
+
+# Create multiple concurrent strands
+let task1 := strand do
+  return async_task(1, 10)
+end
+
+let task2 := strand do
+  return async_task(2, 20)
+end
+
+let task3 := strand do
+  return async_task(3, 30)
+end
+
+# Wait for all tasks
+let result1 := await task1
+let result2 := await task2
+let result3 := await task3
+
+print("Task 1 result:", result1)
+print("Task 2 result:", result2)
+print("Task 3 result:", result3)
+
+# ============= Anonymous Functions =============
+print("\n=== Anonymous Functions ===")
+
+let double := fn(x) do
+  return x * 2
+end
+
+let triple := fn(x) do
+  return x * 3
+end
+
+print("double(7) =", double(7))
+print("triple(7) =", triple(7))
+
+# ============= Mutable Variables =============
+print("\n=== Mutable Variables ===")
+
+var counter := 0
+print("Initial counter:", counter)
+
+counter = counter + 1
+print("After increment:", counter)
+
+counter = counter + 10
+print("After adding 10:", counter)
+
+# ============= Constants =============
+print("\n=== Constants ===")
+
+const MAX_SIZE !:= 100
+const VERSION !:= "1.0.0"
+
+print("MAX_SIZE:", MAX_SIZE)
+print("VERSION:", VERSION)
+
+# ============= Final Message =============
+print("\n=== Demo Complete ===")
+print("All Flo language features demonstrated successfully!")
