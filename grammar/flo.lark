@@ -1,0 +1,192 @@
+// Flo Language Grammar (Lark Parser)
+// Complete grammar for Flo v0.1 prototype
+
+?start: module
+
+module: statement*
+
+?statement: import_stmt
+          | const_decl
+          | let_decl
+          | var_decl
+          | fn_decl
+          | capability_req
+          | expr_stmt
+          | return_stmt
+
+// Import statements
+import_stmt: "bind" NAME ":::" import_path ("as" NAME)?
+import_path: IMPORT_PATH VERSION_SPEC?
+IMPORT_PATH: /[a-zA-Z_][a-zA-Z0-9_\/]*/
+VERSION_SPEC: "@" /[\^~]?[0-9]+(\.[0-9]+){0,2}/
+
+// Capability requests
+capability_req: "request" "cap" NAME "as" NAME
+
+// Variable declarations
+const_decl: "const" NAME "!:=" expr
+let_decl: "let" NAME type_annotation? ":=" expr
+var_decl: "var" NAME type_annotation? ":=" expr
+
+// Type annotations
+type_annotation: ":" type_expr
+?type_expr: simple_type
+          | generic_type
+          | function_type
+
+simple_type: NAME
+generic_type: NAME "[" type_expr ("," type_expr)* "]"
+function_type: "fn" "(" type_list? ")" "->" type_expr
+type_list: type_expr ("," type_expr)*
+
+// Function declarations
+fn_decl: "fn" NAME "(" param_list? ")" return_type? "do" block "end"
+param_list: param ("," param)*
+param: NAME type_annotation?
+return_type: "->" type_expr
+
+// Return statement
+return_stmt: "return" expr?
+
+// Blocks
+block: statement*
+
+// Expression statement
+expr_stmt: expr
+
+// Expressions (with precedence)
+?expr: assignment_expr
+
+?assignment_expr: pipeline_expr
+                | NAME "=" expr             -> assignment
+
+?pipeline_expr: logical_or_expr
+              | logical_or_expr "|>" pipeline_expr  -> pipeline_forward
+              | pipeline_expr "<|" logical_or_expr  -> pipeline_backward
+
+?logical_or_expr: logical_and_expr
+                | logical_or_expr "||" logical_and_expr  -> logical_or
+
+?logical_and_expr: equality_expr
+                 | logical_and_expr "&&" equality_expr  -> logical_and
+
+?equality_expr: relational_expr
+              | equality_expr "==" relational_expr  -> eq
+              | equality_expr "!=" relational_expr  -> neq
+
+?relational_expr: additive_expr
+                | relational_expr "<" additive_expr   -> lt
+                | relational_expr ">" additive_expr   -> gt
+                | relational_expr "<=" additive_expr  -> lte
+                | relational_expr ">=" additive_expr  -> gte
+
+?additive_expr: multiplicative_expr
+              | additive_expr "+" multiplicative_expr  -> add
+              | additive_expr "-" multiplicative_expr  -> sub
+
+?multiplicative_expr: unary_expr
+                    | multiplicative_expr "*" unary_expr  -> mul
+                    | multiplicative_expr "/" unary_expr  -> div
+                    | multiplicative_expr "%" unary_expr  -> mod
+
+?unary_expr: postfix_expr
+           | "!" unary_expr   -> not_op
+           | "-" unary_expr   -> neg
+           | "+" unary_expr   -> pos
+
+?postfix_expr: primary_expr
+             | postfix_expr "(" arg_list? ")"           -> call
+             | postfix_expr "[" expr "]"                -> index
+             | postfix_expr "." NAME                    -> attr
+             | postfix_expr "?." NAME                   -> optional_chain
+
+arg_list: expr ("," expr)*
+
+?primary_expr: literal
+             | "true"                       -> bool_true
+             | "false"                      -> bool_false
+             | "nil"                        -> nil_lit
+             | NAME                         -> var_ref
+             | "(" expr ")"
+             | if_expr
+             | match_expr
+             | for_expr
+             | while_expr
+             | attempt_expr
+             | fn_expr
+             | strand_expr
+             | await_expr
+             | list_expr
+             | map_expr
+             | option_expr
+             | result_expr
+
+// Literals
+?literal: INT              -> int_lit
+        | FLOAT            -> float_lit
+        | STRING           -> string_lit
+
+// Control flow
+if_expr: "if" expr "do" block elif_clause* else_clause? "end"
+elif_clause: "elif" expr "do" block
+else_clause: "else" "do" block
+
+match_expr: "match" expr "do" match_arm+ "end"
+match_arm: pattern "=>" expr
+?pattern: literal_pattern
+        | var_pattern
+        | wildcard_pattern
+        | option_pattern
+        | result_pattern
+        | list_pattern
+
+literal_pattern: literal
+var_pattern: NAME
+wildcard_pattern: "_"
+option_pattern: "Some" "(" pattern ")" | "None"
+result_pattern: "Ok" "(" pattern ")" | "Err" "(" pattern ")"
+list_pattern: "[" pattern_list? "]"
+pattern_list: pattern ("," pattern)*
+
+for_expr: "for" NAME "in" expr "do" block "end"
+
+while_expr: "while" expr "do" block "end"
+
+attempt_expr: "attempt" "do" block rescue_clause? finally_clause? "end"
+rescue_clause: "rescue" NAME "do" block
+finally_clause: "finally" "do" block
+
+// Function expressions
+fn_expr: "fn" "(" param_list? ")" return_type? "do" block "end"
+
+// Async/concurrency
+strand_expr: "strand" "do" block "end"
+await_expr: "await" expr
+
+// Collections
+list_expr: "[" expr_list? "]"
+expr_list: expr ("," expr)*
+
+map_expr: "{" map_entry_list? "}"
+map_entry_list: map_entry ("," map_entry)*
+map_entry: (NAME | STRING) ":" expr
+
+// Option and Result
+option_expr: "Some" "(" expr ")"  -> option_some
+           | "None"                -> option_none
+
+result_expr: "Ok" "(" expr ")"     -> result_ok
+           | "Err" "(" expr ")"    -> result_err
+
+// Terminals
+NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+INT: /[0-9]+/
+FLOAT: /[0-9]+\.[0-9]+/
+STRING: /"([^"\\]|\\.)*"/ | /'([^'\\]|\\.)*'/
+
+// Whitespace and comments
+%import common.WS
+%ignore WS
+
+COMMENT: /#[^\n]*/
+%ignore COMMENT
