@@ -18,7 +18,7 @@ module: statement*
 import_stmt: "bind" NAME ":::" import_path ("as" NAME)?
 import_path: IMPORT_PATH VERSION_SPEC?
 IMPORT_PATH: /[a-zA-Z_][a-zA-Z0-9_\/]*/
-VERSION_SPEC: "@" /[\^~]?[0-9]+\.[0-9]+\.[0-9]+/
+VERSION_SPEC: "@" /[\^~]?[0-9]+(\.[0-9]+){0,2}/
 
 // Capability requests
 capability_req: "request" "cap" NAME "as" NAME
@@ -90,7 +90,7 @@ expr_stmt: expr
                     | multiplicative_expr "%" unary_expr  -> mod
 
 ?unary_expr: postfix_expr
-           | "!" unary_expr   -> not
+           | "!" unary_expr   -> not_op
            | "-" unary_expr   -> neg
            | "+" unary_expr   -> pos
 
@@ -103,6 +103,9 @@ expr_stmt: expr
 arg_list: expr ("," expr)*
 
 ?primary_expr: literal
+             | "true"                       -> bool_true
+             | "false"                      -> bool_false
+             | "nil"                        -> nil_lit
              | NAME                         -> var_ref
              | "(" expr ")"
              | if_expr
@@ -122,10 +125,6 @@ arg_list: expr ("," expr)*
 ?literal: INT              -> int_lit
         | FLOAT            -> float_lit
         | STRING           -> string_lit
-        | BOOL             -> bool_lit
-        | "nil"            -> nil_lit
-
-BOOL: "true" | "false"
 
 // Control flow
 if_expr: "if" expr "do" block elif_clause* else_clause? "end"
@@ -173,8 +172,11 @@ map_entry_list: map_entry ("," map_entry)*
 map_entry: (NAME | STRING) ":" expr
 
 // Option and Result
-option_expr: "Some" "(" expr ")" | "None"
-result_expr: "Ok" "(" expr ")" | "Err" "(" expr ")"
+option_expr: "Some" "(" expr ")"  -> option_some
+           | "None"                -> option_none
+
+result_expr: "Ok" "(" expr ")"     -> result_ok
+           | "Err" "(" expr ")"    -> result_err
 
 // Terminals
 NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
